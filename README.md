@@ -11,7 +11,7 @@ rd = ReLU(rd + rs1 × rs2)      where ReLU(x) = max(0, x)
 *Custom assembler installed, test program assembled, and `mac_relu` correctly disassembled by the modified `objdump`.*
 
 ![RARS execution output](docs/images/rars_modified.png)
-*The same instruction, now executing inside a modified RARS simulator — four test cases, output matching hand-calculated values exactly.*
+*The same instruction, now executing inside a modified RARS simulator - four test cases, output matching hand-calculated values exactly.*
 
 ---
 
@@ -35,11 +35,11 @@ Most "custom instruction" tutorials stop at teaching an assembler a new mnemonic
 
 **Design → Encode (GNU Binutils) → Decode (GNU objdump) → Assemble natively (RARS) → Execute (patched RARS)**
 
-Everything was done on Windows using MSYS2 — no WSL, no hardware, no FPGA. That's a deliberate scope choice, not a shortcut: WSL had previously caused hash-mismatch/corruption issues on this machine, and hardware implementation was explicitly out of scope for this project.
+Everything was done on Windows using MSYS2 - no WSL, no hardware, no FPGA. That's a deliberate scope choice, not a shortcut: WSL had previously caused hash-mismatch/corruption issues on this machine, and hardware implementation was explicitly out of scope for this project.
 
 ## Motivation
 
-Neural network workloads spend most of their time on a small set of repeated operations: matrix multiplications, dot products, activations, and quantization. Beyond the arithmetic itself, a CPU also spends real time loading data, storing data, moving data between registers, and executing each step separately. For ML workloads, this data movement is often more expensive than the math. `mac_relu` explores whether one of these ML-relevant patterns (a multiply-accumulate immediately followed by a ReLU clamp) is common and self-contained enough to justify folding into a single instruction, using RISC-V's custom-0 opcode space rather than the two-to-three separate standard instructions it would otherwise take.
+Neural network workloads spend most of their time on a small set of repeated operations: matrix multiplications, dot products, activations, and quantization. Beyond the arithmetic itself, a CPU also spends real time loading data, storing data, moving data between registers, and executing each step separately. For ML workloads, this data movement is often more expensive than the math. `mac_relu` explores whether one of these ML-relevant patterns (a multiply-accumulate immediately followed by a Rectified Linear Unit (ReLU) clamp) is common and self-contained enough to justify folding into a single instruction, using RISC-V's custom-0 opcode space rather than the two-to-three separate standard instructions it would otherwise take.
 
 ---
 
@@ -66,7 +66,7 @@ Neural network workloads spend most of their time on a small set of repeated ope
 | rd      | register             | [11:7]  |
 | opcode  | `0001011` (custom-0) | [6:0]   |
 
-`0001011` is one of RISC-V's officially reserved **custom-0** opcode slots — set aside by the spec specifically for non-standard extensions, so this doesn't collide with any real instruction.
+`0001011` is one of RISC-V's officially reserved **custom-0** opcode slots - set aside by the spec specifically for non-standard extensions, so this doesn't collide with any real instruction.
 
 **Example encoding:**
 ```
@@ -159,7 +159,7 @@ riscv-none-elf-objdump -d test_mac.o
    c:   0262850b            mac_relu a0,t0,t1
 ```
 
-This confirms the encode/decode round-trip works — but at this point `mac_relu` is still just a *name* for a bit pattern. Nothing runs it yet.
+This confirms the encode/decode round-trip works - but at this point `mac_relu` is still just a *name* for a bit pattern. Nothing runs it yet.
 
 ---
 
@@ -208,6 +208,7 @@ public class MAC_RELU extends BasicInstruction {
     public void simulate(ProgramStatement statement) {
         int[] operands = statement.getOperands();
         int rdVal = RegisterFile.getValue(operands[0]);
+        // We read rdVal first because the instruction must accumulate: rd_new = ReLU(rd_old + rs1 * rs2)
         int rs1Val = RegisterFile.getValue(operands[1]);
         int rs2Val = RegisterFile.getValue(operands[2]);
 
@@ -339,9 +340,29 @@ All four outputs match independently hand-calculated expected values exactly, ac
 
 ## File Structure
 
-Actual project layout, as developed:
+## Repository Structure
 
+```text
+riscv-custom-mac-relu-instruction/
+│
+├── README.md
+├── docs
+├── patches/
+│   ├── riscv-opc.c
+│   └── riscv-opc.h
+│
+├── rars-src/
+│   └── modified RARS source code
+│
+├── rars.jar
+│
+└── tests/
+    ├── test_mac.S
+    ├── test_dot.S
+    └── riscv1.asm
 ```
+### Actual project layout, as developed:
+``` text
 D:\RISC-V\
 ├── docs\
 │   └── README.md         # motivation, instruction syntax, step-by-step roadmap
@@ -358,7 +379,6 @@ D:\RISC-V\
 ├── build\                         # build artifacts
 ├── riscv1.asm                     # RARS execution test (native mac_relu mnemonic, 4 cases)
 ├── test_mac.S / test_mac.o        # Binutils encode/decode test
-├── test_mac_real.S / .o           # extended Binutils test (multiple register values)
 └── test_dot.S / .o                # dot_prod instruction test (Binutils only, not yet in RARS)
 ```
 ---
@@ -371,11 +391,11 @@ D:\RISC-V\
 - A real fetch-decode-execute loop (RARS) correctly computes `max(0, rd + rs1×rs2)` across multiple register value combinations
 
 **Not claimed:**
-- No hardware/RTL/FPGA implementation — this is a software-simulator-level result, which was the explicit scope given for this project
-- No integration with Spike or GCC — RARS and GNU Binutils were the two tools targeted here
+- No hardware/RTL/FPGA implementation - this is a software-simulator-level result, which was the explicit scope given for this project
+- No integration with Spike or GCC - RARS and GNU Binutils were the two tools targeted here
 - The instruction is not part of any official RISC-V extension - it's a custom, non-standard opcode for coursework/demonstration purposes
 
-Being explicit about scope like this is a strength, not a weakness — it shows the difference between "recognized by an assembler" and "actually executes" is understood, which is the core technical insight of the whole project.
+Being explicit about scope like this is a strength, not a weakness - it shows the difference between "recognized by an assembler" and "actually executes" is understood, which is the core technical insight of the whole project.
 
 ---
 
