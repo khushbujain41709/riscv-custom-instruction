@@ -1,0 +1,114 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+PS C:\Users\khushbu> cd D:
+PS D:\> cd RISC-V
+PS D:\RISC-V> @"
+>> .text
+>> .globl main
+>> main:
+>>     # ========== Test 1 ==========
+>>     # Input: x10 = -2, x5 = 3, x6 = 4
+>>     # Expected: 10
+>>
+>>     li x10, -2
+>>     li x5, 3
+>>     li x6, 4
+>>
+>>     # Simulate mac_relu x10, x5, x6
+>>     mul t0, x5, x6      # t0 = x5 * x6
+>>     add t0, x10, t0     # t0 = x10 + t0
+>>     blt t0, zero, set_zero1
+>>     mv x10, t0
+>>     j print1
+>> set_zero1:
+>>     li x10, 0
+>> print1:
+>>     # Print result
+>>     li a7, 1
+>>     mv a0, x10
+>>     ecall
+>>     li a7, 11
+>>     li a0, 10
+>>     ecall
+>>
+>>     # ========== Test 2 ==========
+>>     # Input: x10 = -5, x5 = 2, x6 = 1
+>>     # Expected: 0
+>>
+>>     li x10, -5
+>>     li x5, 2
+>>     li x6, 1
+>>
+>>     mul t0, x5, x6
+>>     add t0, x10, t0
+>>     blt t0, zero, set_zero2
+>>     mv x10, t0
+>>     j print2
+>> set_zero2:
+>>     li x10, 0
+>> print2:
+>>     li a7, 1
+>>     mv a0, x10
+>>     ecall
+>>     li a7, 11
+>>     li a0, 10
+>>     ecall
+>>
+>>     # ========== Test 3 ==========
+>>     # Input: x10 = 0, x5 = 10, x6 = 5
+>>     # Expected: 50
+>>
+>>     li x10, 0
+>>     li x5, 10
+>>     li x6, 5
+>>
+>>     mul t0, x5, x6
+>>     add t0, x10, t0
+>>     blt t0, zero, set_zero3
+>>     mv x10, t0
+>>     j print3
+>> set_zero3:
+>>     li x10, 0
+>> print3:
+>>     li a7, 1
+>>     mv a0, x10
+>>     ecall
+>>     li a7, 11
+>>     li a0, 10
+>>     ecall
+>>
+>>     # ========== Test 4 ==========
+>>     # Input: x10 = 0, x5 = 0, x6 = 0
+>>     # Expected: 0
+>>
+>>     li x10, 0
+>>     li x5, 0
+>>     li x6, 0
+>>
+>>     mul t0, x5, x6
+>>     add t0, x10, t0
+>>     blt t0, zero, set_zero4
+>>     mv x10, t0
+>>     j print4
+>> set_zero4:
+>>     li x10, 0
+>> print4:
+>>     li a7, 1
+>>     mv a0, x10
+>>     ecall
+>>
+>>     # Exit
+>>     li a7, 10
+>>     ecall
+>> "@ | Out-File -FilePath D:\RISC-V\mac_relu_calc_rars.S -Encoding ASCII
+
+PS D:\RISC-V> cd D:\RISC-V
+PS D:\RISC-V> java -jar rars.jar mac_relu_calc_rars.S
+RARS 1.6  Copyright 2003-2019 Pete Sanderson and Kenneth Vollmar
+
+10
+0
+50
+0
+PS D:\RISC-V>
