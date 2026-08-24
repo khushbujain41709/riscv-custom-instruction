@@ -7,10 +7,10 @@ mac_relu rd, rs1, rs2
 rd = ReLU(rd + rs1 × rs2)      where ReLU(x) = max(0, x)
 ```
 
-![Build and disassembly output](images/build-output.png)
+![Build and disassembly output](docs/images/build-output.png)
 *Custom assembler installed, test program assembled, and `mac_relu` correctly disassembled by the modified `objdump`.*
 
-![RARS execution output](images/rars_modified.png)
+![RARS execution output](docs/images/rars_modified.png)
 *The same instruction, now executing inside a modified RARS simulator — four test cases, output matching hand-calculated values exactly.*
 
 ---
