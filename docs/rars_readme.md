@@ -4,6 +4,8 @@ This document covers the second half of the project: making the custom `mac_relu
 
 ---
 
+#### rars.jar in RISC-V is unmodified and rars.jar in rars folder is modified.
+
 ## Table of Contents
 1. [Why This Part Was Needed](#why-this-part-was-needed)
 2. [What Was Achieved](#what-was-achieved)
