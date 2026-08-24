@@ -1,0 +1,6 @@
+riscv-gnu-toolchain/
+riscv-isa-sim/
+toolchain/
+riscv-opcodes/
+build/
+*.o
